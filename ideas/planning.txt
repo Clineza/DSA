@@ -1,0 +1,16 @@
+This is just the planning text file to get a good idea for what I want for this project.
+
+1. I want the user to run a command like.. "viewdsa" and that will pop open a menu
+separated by data structures and algorithms that the user can choose from.
+
+2. once the user selects and option, they will be taken to a screen to demonstrate the DSA
+there will be instructions with different commands depending on what it is.
+
+	For Example: Linked list will tell the user to create nodes, or input nodes based on a format that i set.
+	add 12 or add hello world. and of course there will be stuff like previous or next to print out the linked list.
+
+3. I want the UI for each example to be pretty with and input and output box potentially. For the LInked list option, it will be really cool if there was a way to make the output as nodes with arrows pointing to the next node. and the node would be encased in a box.
+
+for an algorithm.. it could be based on pure Input then Output boxes that you can view side by side. I'll probably set a fixed number of inputs that you can have for the algorithm though. it would be cool if there was a way to animate the algorith but we'll see.
+
+
