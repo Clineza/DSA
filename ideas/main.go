@@ -3,16 +3,22 @@ package main
 import (
 	"fmt"
 	tea "github.com/charmbracelet/bubbletea"
-	"github.com/charmbracelet/harmonica"
+	"github.com/charmbracelet/lipgloss"
 	"os"
-	"strconv"
+)
+
+var (
+	red  = lipgloss.NewStyle().Foreground(lipgloss.Color("9"))
+	blue = lipgloss.NewStyle().Foreground(lipgloss.Color("12"))
+	gray = lipgloss.NewStyle().Foreground(lipgloss.Color("7"))
 )
 
 type model struct {
 	cursor         int
-	numbers        []int
-	spring         harmonica.Spring
-	numProjectiles []*harmonica.Projectile
+	choices        []string
+	algorithms     []string
+	dataStructures []string
+	selected       map[int]struct{}
 }
 
 func initialModel() model {
@@ -29,6 +35,22 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		switch msg.String() {
 		case "ctrl+c", "q":
 			return m, tea.Quit
+		case "up", "k":
+			if m.cursor > 0 {
+				m.cursor--
+			}
+
+		case "down", "j":
+			if m.cursor < len(m.choices)-1 {
+				m.cursor++
+			}
+		case "enter", " ":
+			_, ok := m.selected[m.cursor]
+			if ok {
+				delete(m.selected, m.cursor)
+			} else {
+				m.selected[m.cursor] = struct{}{}
+			}
 		}
 	}
 
@@ -37,30 +59,67 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 func (m model) View() string {
 	// The header
-	s := "What should we buy at the market?\n\n"
+	selectedColor := gray
+	isSelected := false
+	s := "\n\n" + gray.Render("which one do you fancy?")
+	s += "\n"
 
-	for _, letter := range m.numbers {
-		s += strconv.Itoa(letter) + " "
+	for i, choice := range m.choices {
+		cursor := " "
+		if m.cursor == i {
+			isSelected = true
+			cursor = ">"
+		} else {
+			isSelected = false
+		}
+
+		checked := " "
+		if _, ok := m.selected[i]; ok {
+			checked = "x"
+		}
+
+		if i == 0 {
+			s += fmt.Sprintf("\n" + gray.Render("an ") + red.Render("algorithm") + gray.Render("...") + "\n\n")
+		} else if i == len(m.algorithms) {
+			s += "\nor a " + blue.Render("Data Structure") + "...\n\n"
+		}
+
+		if i < len(m.algorithms) {
+			if isSelected == true {
+				selectedColor = red
+			} else {
+				selectedColor = gray
+			}
+		} else {
+			if isSelected == true {
+				selectedColor = blue
+			} else {
+				selectedColor = gray
+			}
+		}
+
+		s += fmt.Sprintf(selectedColor.Render("%s [%s] %s"), cursor, checked, choice)
+		s += "\n"
 	}
+
 	s += "\n"
 
 	// The footer
-	s += "\nPress q to quit.\n"
+	s += "\n" + gray.Render("Press q to quit.") + "\n"
 
 	// Send the UI for rendering
 	return s
 }
 
 func main() {
-
-	initPos := harmonica.Point{X: 0, Y: 0}
-	initVel := harmonica.Vector{X: 0, Y: 0}
-	initAcc := harmonica.TerminalGravity
-	pro := *harmonica.NewProjectile(harmonica.FPS(60), initPos, initVel, initAcc)
+	algorithms := []string{"Bubble Sort", "Selection Sort"}
+	dataStructures := []string{"Linked List", "Queue", "Stack"}
+	choices := append(algorithms, dataStructures...)
 	m := model{
-		numbers:        []int{1, 5, 2, 3, 6, 12},
-		spring:         harmonica.NewSpring(harmonica.FPS(60), 6.0, 0.5),
-		numProjectiles: []*harmonica.Projectile{&pro},
+		algorithms:     algorithms,
+		dataStructures: dataStructures,
+		choices:        choices,
+		selected:       make(map[int]struct{}),
 	}
 
 	p := tea.NewProgram(m)
