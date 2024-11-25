@@ -3,26 +3,18 @@ package main
 import (
 	"fmt"
 	tea "github.com/charmbracelet/bubbletea"
-	"github.com/charmbracelet/lipgloss"
+	"main/views"
 	"os"
 )
 
-var (
-	red  = lipgloss.NewStyle().Foreground(lipgloss.Color("9"))
-	blue = lipgloss.NewStyle().Foreground(lipgloss.Color("12"))
-	gray = lipgloss.NewStyle().Foreground(lipgloss.Color("7"))
-)
-
 type model struct {
-	cursor         int
-	choices        []string
-	algorithms     []string
-	dataStructures []string
-	selected       map[int]struct{}
+	currentView tea.Model
 }
 
 func initialModel() model {
-	return model{}
+	return model{
+		currentView: views.NewMenu(),
+	}
 }
 
 func (m model) Init() tea.Cmd {
@@ -30,99 +22,17 @@ func (m model) Init() tea.Cmd {
 }
 
 func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
-	switch msg := msg.(type) {
-	case tea.KeyMsg:
-		switch msg.String() {
-		case "ctrl+c", "q":
-			return m, tea.Quit
-		case "up", "k":
-			if m.cursor > 0 {
-				m.cursor--
-			}
-
-		case "down", "j":
-			if m.cursor < len(m.choices)-1 {
-				m.cursor++
-			}
-		case "enter", " ":
-			_, ok := m.selected[m.cursor]
-			if ok {
-				delete(m.selected, m.cursor)
-			} else {
-				m.selected[m.cursor] = struct{}{}
-			}
-		}
-	}
-
-	return m, nil
+	model, cmd := m.currentView.Update(msg)
+	return model, cmd
 }
 
 func (m model) View() string {
-	// The header
-	selectedColor := gray
-	isSelected := false
-	s := "\n\n" + gray.Render("which one do you fancy?")
-	s += "\n"
-
-	for i, choice := range m.choices {
-		cursor := " "
-		if m.cursor == i {
-			isSelected = true
-			cursor = ">"
-		} else {
-			isSelected = false
-		}
-
-		checked := " "
-		if _, ok := m.selected[i]; ok {
-			checked = "x"
-		}
-
-		if i == 0 {
-			s += fmt.Sprintf("\n" + gray.Render("an ") + red.Render("algorithm") + gray.Render("...") + "\n\n")
-		} else if i == len(m.algorithms) {
-			s += "\nor a " + blue.Render("Data Structure") + "...\n\n"
-		}
-
-		if i < len(m.algorithms) {
-			if isSelected == true {
-				selectedColor = red
-			} else {
-				selectedColor = gray
-			}
-		} else {
-			if isSelected == true {
-				selectedColor = blue
-			} else {
-				selectedColor = gray
-			}
-		}
-
-		s += fmt.Sprintf(selectedColor.Render("%s [%s] %s"), cursor, checked, choice)
-		s += "\n"
-	}
-
-	s += "\n"
-
-	// The footer
-	s += "\n" + gray.Render("Press q to quit.") + "\n"
-
-	// Send the UI for rendering
-	return s
+	view := m.currentView.View()
+	return view
 }
 
 func main() {
-	algorithms := []string{"Bubble Sort", "Selection Sort"}
-	dataStructures := []string{"Linked List", "Queue", "Stack"}
-	choices := append(algorithms, dataStructures...)
-	m := model{
-		algorithms:     algorithms,
-		dataStructures: dataStructures,
-		choices:        choices,
-		selected:       make(map[int]struct{}),
-	}
-
-	p := tea.NewProgram(m)
+	p := tea.NewProgram(initialModel())
 	if _, err := p.Run(); err != nil {
 		fmt.Printf("Alas, there's been an error: %v", err)
 		os.Exit(1)
@@ -130,8 +40,18 @@ func main() {
 }
 
 /*
+	the code works but i need to split the program into different views
+1. Start View.
+2. algorithm view
+3. data structure view
 
-so i need an array of projectiles.
-each projectile will have a value equal to what's the base
+each data structure and algorithm will be its own view
+each view should have everything necessary to select (controls) and to view the text or interact.
+
+so pretty much main.go should simply be for routing reasons and should hold the states of the views along with the data for the views themselves.
+
+
+
+
 
 */
