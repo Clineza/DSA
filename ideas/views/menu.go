@@ -17,7 +17,6 @@ type Menu struct {
 	algorithms     []string
 	dataStructures []string
 	choices        []string
-	selected       map[int]struct{}
 }
 
 func NewMenu() Menu {
@@ -28,7 +27,6 @@ func NewMenu() Menu {
 		algorithms:     algorithms,
 		dataStructures: dataStructures,
 		choices:        choices,
-		selected:       make(map[int]struct{}),
 	}
 }
 
@@ -52,13 +50,10 @@ func (m Menu) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.cursor++
 			}
 		case "enter", " ":
-			_, ok := m.selected[m.cursor]
-			if ok {
-				delete(m.selected, m.cursor)
-			} else {
-				m.selected[m.cursor] = struct{}{}
+			switch m.choices[m.cursor] {
+			case "Bubble Sort":
+				return NewBubbleSort(), nil
 			}
-			return NewBubbleSort(), nil
 		}
 	}
 
